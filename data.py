@@ -35,7 +35,6 @@ def add_new_columns(df):
 
 
 def data_analysis(df):
-    season_names = ['fall', 'spring', 'summer', 'winter']
     print('describe output:')
     print(df.describe().to_string())
     print()
@@ -43,24 +42,39 @@ def data_analysis(df):
     corr = df.corr()
     print(corr.to_string())
     print()
+    corr_dict = corr.to_dict()
+    corr_pairs = {}
 
-    corr_sorted = corr[corr < 1].abs().unstack().sort_values(ascending=False).drop_duplicates()
+    for i, (row_name, row_vals) in enumerate(zip(corr_dict.keys(), corr_dict.values())):
+        for (column, corr_val) in list(zip(row_vals.keys(), row_vals.values()))[i + 1:]:
+            pair = row_name, column
+            corr_pairs[pair] = abs(corr_val)
+            # print(f'{row_name} and {column} = {corr_val}')
+    sorted_tuples = sorted(corr_pairs.items(), key=lambda item: item[1])
+    corr_pairs_sorted = {k: v for k, v in sorted_tuples}
+    print(pd.Series(corr_pairs_sorted).head(5))
+    print(pd.Series(corr_pairs_sorted).tail(5)[::-1])
 
-    print("Highest correlated are: ")
-    for count, (pair, corr) in enumerate(zip(corr_sorted.head(5).keys(), corr_sorted.head(5).to_dict().values())):
-        pair = reversed(pair)
-        pair = tuple(pair)
-        print(f'{count + 1}. {pair} with {corr:.6f}')
-    print()
-
-    print("Lowest correlated are: ")
-    for count, (pair, corr) in enumerate(zip(reversed(corr_sorted[corr_sorted > 0].tail(5).keys()),
-                                             reversed(corr_sorted[corr_sorted > 0].tail(5).to_dict().values()))):
-        print(f'{count + 1}. {pair} with {corr:.6f}')
-    print()
-
-    df_grouped = df.groupby('season_name').mean()
-    df_grouped_dict = df_grouped['t_diff'].to_dict()
-    for season in season_names:
-        print(f'{season} average t_diff is {df_grouped_dict[season]:.2f}')
-    print(f'All average t_diff is {df.t_diff.mean():.2f}')
+    """
+    print(corr[corr < 1].abs().unstack().sort_values(ascending=True))
+        corr_sorted = corr[corr < 1].abs().unstack().sort_values(ascending=False).drop_duplicates()
+    
+        print("Highest correlated are: ")
+        for count, (pair, corr) in enumerate(zip(corr_sorted.head(5).keys(), corr_sorted.head(5).to_dict().values())):
+            pair = reversed(pair)
+            pair = tuple(pair)
+            print(f'{count + 1}. {pair} with {corr:.6f}')
+        print()
+    
+        print("Lowest correlated are: ")
+        for count, (pair, corr) in enumerate(zip(reversed(corr_sorted[corr_sorted > 0].tail(5).keys()),
+                                                 reversed(corr_sorted[corr_sorted > 0].tail(5).to_dict().values()))):
+            print(f'{count + 1}. {pair} with {corr:.6f}')
+        print()
+    
+        df_grouped = df.groupby('season_name').mean()
+        df_grouped_dict = df_grouped['t_diff'].to_dict()"
+        for season in season_names:
+            print(f'{season} average t_diff is {df_grouped_dict[season]:.2f}')
+        print(f'All average t_diff is {df.t_diff.mean():.2f}')
+    """

@@ -48,7 +48,7 @@ def data_analysis(df):
 
     for i, (row_name, row_vals) in enumerate(zip(corr_dict.keys(), corr_dict.values())):
         for (column, corr_val) in list(zip(row_vals.keys(), row_vals.values()))[i + 1:]:
-            pair = row_name, column
+            pair = row_name, column  # making a tuple
             corr_pairs[pair] = abs(corr_val)
             # print(f'{row_name} and {column} = {corr_val}')
     sorted_tuples = sorted(corr_pairs.items(), key=lambda item: item[1])
@@ -58,6 +58,7 @@ def data_analysis(df):
     for index, (pair, corr) in enumerate(zip(reversed(sorted_tuples), pd.Series(corr_pairs_sorted).tail(5)[::-1])):
         print(f'{index + 1}. {pair[0]} with {corr:.6f}')
     print()
+
     print("Lowest correlated are: ")
     for index, (pair, corr) in enumerate(zip(sorted_tuples, pd.Series(corr_pairs_sorted).head(5))):
         print(f'{index + 1}. {pair[0]} with {corr:.6f}')

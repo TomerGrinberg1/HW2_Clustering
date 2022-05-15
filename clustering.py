@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import data
+
 np.random.seed(2)
 
 
@@ -26,7 +29,7 @@ def choose_initial_centroids(data, k):
 
 # ====================
 def transform_data(df, features):
-    """
+    """numbers = [1,2,3]
     Performs the following transformations on df:
         - selecting relevant features
         - scaling
@@ -35,8 +38,13 @@ def transform_data(df, features):
     :param features: list of 2 features from the dataframe
     :return: transformed data as numpy array of shape (n, 2)
     """
-    pass
-    # return data
+    df = df.loc[:, features]
+    col_sum = [sum(df[features[0]]), sum(df[features[1]])]
+    col_min = [min(df[features[0]]), min(df[features[1]])]
+    for i, col in enumerate(features):
+        df[col] = df[col].apply(lambda x: (x - col_min[i]) / col_sum[i])
+    df_np = add_noise(df.to_numpy())
+    return df_np
 
 
 def kmeans(data, k):
@@ -48,20 +56,18 @@ def kmeans(data, k):
     * labels - numpy array of size n, where each entry is the predicted label (cluster number)
     * centroids - numpy array of shape (k, 2), centroid for each cluster.
     """
-    pass
-    # return labels, centroids
+    prev_centroids = choose_initial_centroids(data, k)
+    labels = assign_to_clusters(data, prev_centroids)
+    flag = 0
 
+    while flag == 0:
+        labels = assign_to_clusters(data, prev_centroids)
+        new_centroids = recompute_centroids(data, labels, k)
+        flag = np.array_equal(prev_centroids, new_centroids)
+        prev_centroids = new_centroids
 
-def visualize_results(data, labels, centroids, path):
-    """
-    Visualizing results of the kmeans model, and saving the figure.
-    :param data: data as numpy array of shape (n, 2)
-    :param labels: the final labels of kmeans, as numpy array of size n
-    :param centroids: the final centroids of kmeans, as numpy array of shape (k, 2)
-    :param path: path to save the figure to.
-    """
-    pass
-    # plt.savefig(path)
+    print(np.array_str(prev_centroids, precision=3, suppress_small=True))
+    return labels, prev_centroids
 
 
 def dist(x, y):
@@ -82,8 +88,9 @@ def assign_to_clusters(data, centroids):
     :param centroids: current centroids as numpy array of shape (k, 2)
     :return: numpy array of size n
     """
-    pass
-    # return labels
+    distances = np.sqrt(((data - centroids[:, np.newaxis]) ** 2).sum(axis=2))
+    labels = np.argmin(distances, axis=0)
+    return labels
 
 
 def recompute_centroids(data, labels, k):
@@ -94,6 +101,27 @@ def recompute_centroids(data, labels, k):
     :param k: number of clusters
     :return: numpy array of shape (k, 2)
     """
-    pass
-    # return centroids
+    return np.array([data[labels == k].mean(axis=0) for k in range(k)])
 
+
+def visualize_results(data, labels, centroids, path):
+    """
+    Visualizing results of the kmeans model, and saving the figure.
+    :param data: data as numpy array of shape (n, 2)
+    :param labels: the final labels of kmeans, as numpy array of size n
+    :param centroids: the final centroids of kmeans, as numpy array of shape (k, 2)
+    :param path: path to save the figure to.
+    """
+    #all_features = list(data.columns)
+    #ind1 = all_features.index('cnt')
+    #ind2 = all_features.index('hum')
+    #plt.scatter(data[all_features[ind1]], data[all_features[ind2]])
+    colors = np.array(['cornflowerblue', 'cyan', 'magenta','salmon','palegreen'])
+    plt.scatter(data[:, 0], data[:, 1], c=colors[labels])
+    plt.scatter(centroids[:, 0], centroids[:, 1], c='white', edgecolors='black',
+                marker='*', linewidth=2, s=100)
+    plt.xlabel('cnt')
+    plt.ylabel('hum')
+    plt.title(f'Results for kmeans with k = {centroids.shape[0]}')
+    plt.show()
+    plt.savefig(path)
